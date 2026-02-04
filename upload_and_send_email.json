@@ -1,0 +1,309 @@
+{
+  "name": "Upload and Create Email For Attachment",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "userIds": "6522060782"
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "81f6a95e-4d40-4b3e-ab0e-35e6dbda2aec",
+      "name": "Telegram Trigger",
+      "webhookId": "fe7957c2-f4d3-4837-b992-e80fe61980b9",
+      "credentials": {
+        "telegramApi": {
+          "id": "5pMgRQt9L8H5vUFT",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.message.toJsonString().toUpperCase() }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "51ba6bf2-6c73-47cc-93fc-6ce569bc5faf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.TEXT }}",
+                    "rightValue": "SENDING TESTING DOCUMENT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "48819416-c476-44a7-99cf-ce6200c47de4"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "069ea6c5-301a-4353-a788-c29a67bbdb1f",
+                    "leftValue": "={{ $json.TEXT }}",
+                    "rightValue": "SENDING TESTING DOCUMENT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d182ec5a-efe5-4019-9e36-980499ce13f1",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "chatId": "6522060782",
+        "text": "Prompt doesn't exist",
+        "additionalFields": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        96
+      ],
+      "id": "8e826b39-0f98-410f-984a-555cac0c173c",
+      "name": "Send a text message",
+      "webhookId": "ac19a4b7-c8b4-4d32-b8d8-e66e10143fd3",
+      "credentials": {
+        "telegramApi": {
+          "id": "5pMgRQt9L8H5vUFT",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "'1PJBRycMDfKsFsLbvf-dK2Qfhy7O0L1RD' in parents and mimeType = 'application/pdf'",
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        -64
+      ],
+      "id": "caec8d28-566d-46c3-acdc-3598b4a37bfa",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "XXrkf4QorXMtaLUI",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        832,
+        -64
+      ],
+      "id": "55add25e-71de-45f7-8391-0a4c881f26be",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "XXrkf4QorXMtaLUI",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst file = items[0];\nconst fileName = file.json.name || 'document.pdf';\n\n// Get binary data using n8n's helper\nconst binaryKeys = Object.keys(file.binary || {});\nconst binaryPropertyName = binaryKeys[0];\n\n// Use this.helpers to get proper base64\nconst binaryDataBuffer = await this.helpers.getBinaryDataBuffer(0, binaryPropertyName);\nconst base64Content = binaryDataBuffer.toString('base64');\n\nconst htmlBody = '<div style=\"font-family: Arial, sans-serif; color: #333; line-height: 1.8;\">' +\n  '<p><strong>Yth.<br>Bapak/Ibu IT Support SD6</strong></p>' +\n  '<p>Sehubungan dengan telah selesainya dilakukan testing pada project terkait. Dengan ini kami mengajukan testing lanjutan kepada tim IT Support SD6 beserta dengan file yang terlampir.</p>' +\n  '<div style=\"background: #f0f8ff; padding: 15px; border-left: 4px solid #0066cc; margin: 20px 0;\">' +\n  '<p style=\"margin: 0;\"><strong>File Terlampir:</strong> ' + fileName + '</p>' +\n  '</div>' +\n  '<p>Demikian informasi yang dapat saya sampaikan dan terima kasih atas perhatian dan kerja samanya.</p>' +\n  '<p style=\"margin-top: 30px;\"><strong>Regards,</strong><br><br>' +\n  '<strong style=\"color: #0066cc;\">Ridho Wisnu</strong><br>' +\n  '<em style=\"color: #666;\">IT Software Development 6</em></p>' +\n  '</div>';\n\nreturn [{\n  json: {\n    sender: {\n      email: \"firmanwisnu432@gmail.com\",\n      name: \"Ridho Wisnu\"\n    },\n    to: [{\n      email: \"ridhowisnufirmantya@gmail.com\",\n      name: \"Ridho Wisnu Firmantya\"\n    }],\n    subject: \"Pengajuan Testing Lanjutan - IT Support SD6\",\n    htmlContent: htmlBody,\n    attachment: [{\n      name: fileName,\n      content: base64Content\n    }]\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        -64
+      ],
+      "id": "d9ad28f4-108d-4c62-bb69-88fcbb4ec740",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.brevo.com/v3/smtp/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1264,
+        -64
+      ],
+      "id": "8bfcb6a5-2eaa-4f3a-be88-2eda8eaa860d",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "UjxiFFNn1VJc4n46",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "11d6c72d-3eb7-4a50-bf73-cf784fd892cb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dc12bb738b6d289675ba92357bc76f60bab599ea7fd79c16f82ee7ff1f1d413d"
+  },
+  "id": "c1b3qMdu2Nio6iZcWi3VS",
+  "tags": []
+}
